@@ -1,0 +1,35 @@
+[features]
+seeds = true
+skip-lint = false
+[programs.localnet]
+lulo_integration = "7YMgh7tHNP1mahFrpL4GYT6GeCQ3KmyM2gZCirJF2epV"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[workspace]
+members = ["programs/lulo-integration"]
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test]
+startup_wait = 12000
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+ticks_per_slot = 20
+rpc_port = 1899
+faucet_port = 2000
+
+# Lulo Clones
+[[test.validator.clone]]
+address = "FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q"
+[[test.validator.clone]]
+address = "4dj7xRvYSm4PgUBkmP86cEQXtXdReZg1BMkKMd8VxREp"
+[[test.validator.clone]]
+address = "4NCKkwUCBRcu7TGxDaEZ6Uw6TvzdDbnvSuYbXLzrLnzv"
