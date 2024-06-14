@@ -73,5 +73,6 @@ jobs:
           restore-keys: ${{ runner.os }}-yarn-
 
       - run: yarn install
+      - run: anchor build
       - run: tsc --noEmit
-      - run: anchor test
+      - run: anchor test --skip-build
