@@ -1,0 +1,77 @@
+name: CI
+
+on: [push]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_VERSION: 1.73.0
+  NODE_VERSION: 20.2.0
+  SOLANA_VERSION: v1.17.1
+  ANCHOR_VERSION: 0.28.0
+  YARN_VERSION: 3.3.0
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          cache: yarn
+          node-version: ${{ env.NODE_VERSION }}
+
+      - run: npm -g i typescript @coral-xyz/anchor-cli@$ANCHOR_VERSION
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: ${{ env.RUST_VERSION }}
+            override: true
+
+      - name: Cache Rust
+        id: cargo-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+          key: |
+            ${{ runner.os }}-cargo-cache-${{ env.RUST_VERSION }}-${{ env.ANCHOR_VERSION }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-cache-${{ env.RUST_VERSION }}-${{ env.ANCHOR_VERSION }}-
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Cache Solana .local
+        id: local-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.local
+          key: ${{ runner.os }}-local-cache-${{ env.SOLANA_VERSION }}-${{ hashFiles('~/.local/share/solana/install/active_release/version.yml') }}
+          restore-keys: ${{ runner.os }}-local-cache-${{ env.SOLANA_VERSION }}-
+
+      - name: Install Solana
+        if: steps.local-cache.outputs.cache-hit != 'true'
+        run: sh -c "$(curl -sSfL https://release.solana.com/${{ env.SOLANA_VERSION }}/install)"
+
+      - run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+
+      - name: Cache yarn
+        uses: actions/cache@v3
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - run: yarn install
+      - run: tsc --noEmit
+      - run: anchor test

@@ -7,6 +7,7 @@ import {
     NATIVE_MINT,
 } from '@solana/spl-token'
 import { PublicKey, SystemProgram } from '@solana/web3.js'
+import { assert } from 'chai'
 import { Vault } from '../target/types/vault'
 
 const LULO_FLEXLEND_PROGRAM = new PublicKey(
@@ -97,6 +98,12 @@ describe('lulo vault', () => {
             .rpc()
 
         console.log({ depositVaultTx })
+
+        assert.equal(
+            (await connection.getTokenAccountBalance(vaultTokenAccount)).value
+                .uiAmount,
+            2,
+        )
     })
 
     it('withdraw from vault', async () => {
@@ -138,6 +145,12 @@ describe('lulo vault', () => {
             .rpc()
 
         console.log({ withdrawVaultTx })
+
+        assert.equal(
+            (await connection.getTokenAccountBalance(vaultTokenAccount)).value
+                .uiAmount,
+            1,
+        )
     })
 
     it('transfer from vault to lulo', async () => {
@@ -182,6 +195,12 @@ describe('lulo vault', () => {
             .rpc({ skipPreflight: true })
 
         console.log({ luloDepositTx })
+
+        assert.equal(
+            (await connection.getTokenAccountBalance(luloUserTokenAccount))
+                .value.uiAmount,
+            1,
+        )
     })
 
     it('request lulo withdraw', async () => {
