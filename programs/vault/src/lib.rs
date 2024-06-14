@@ -17,8 +17,6 @@ pub mod vault {
         vault.mint = ctx.accounts.mint_address.key();
         vault.bump = [*ctx.bumps.get("vault").unwrap()];
 
-        msg!("vault: {:?}", vault);
-
         Ok(())
     }
 
@@ -137,7 +135,7 @@ pub struct InitializeVault<'info> {
     pub owner: Signer<'info>,
 
     #[account(mut)]
-    pub mint_address: Box<Account<'info, Mint>>,
+    pub mint_address: Account<'info, Mint>,
 
     #[account(
         init,
@@ -172,7 +170,7 @@ pub struct DepositVault<'info> {
     pub vault: Account<'info, Vault>,
 
     #[account(mut)]
-    pub mint_address: Box<Account<'info, Mint>>,
+    pub mint_address: Account<'info, Mint>,
 
     #[account(
 	    mut,
@@ -213,7 +211,7 @@ pub struct WithdrawVault<'info> {
     pub vault: Account<'info, Vault>,
 
     #[account(mut)]
-    pub mint_address: Box<Account<'info, Mint>>,
+    pub mint_address: Account<'info, Mint>,
 
     #[account(
 	    mut,
@@ -266,15 +264,15 @@ pub struct LuloDeposit<'info> {
 
     #[account(mut)]
     /// CHECK: cpi
-    pub lulo_user_account: UncheckedAccount<'info>,
+    pub lulo_user_account: AccountInfo<'info>,
 
     #[account(mut)]
     /// CHECK: cpi
-    pub lulo_user_token_account: UncheckedAccount<'info>,
+    pub lulo_user_token_account: AccountInfo<'info>,
 
     #[account(mut)]
     /// CHECK: CPI
-    pub lulo_promotion_reserve: UncheckedAccount<'info>,
+    pub lulo_promotion_reserve: AccountInfo<'info>,
 
     #[account(address = lulo_cpi::ID)]
     /// CHECK: CPI
@@ -312,15 +310,15 @@ pub struct LuloWithdraw<'info> {
 
     #[account(mut)]
     /// CHECK: cpi
-    pub lulo_user_account: UncheckedAccount<'info>,
+    pub lulo_user_account: AccountInfo<'info>,
 
     #[account(mut)]
     /// CHECK: cpi
-    pub lulo_user_token_account: UncheckedAccount<'info>,
+    pub lulo_user_token_account: AccountInfo<'info>,
 
     #[account(mut)]
     /// CHECK: CPI
-    pub lulo_promotion_reserve: UncheckedAccount<'info>,
+    pub lulo_promotion_reserve: AccountInfo<'info>,
 
     #[account(address = lulo_cpi::ID)]
     /// CHECK: CPI

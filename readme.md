@@ -10,7 +10,7 @@ This idea can be adapted to a Protocol Reserve/Vault where only the program admi
 
 ### Run
 
-1. Setup Rust >= 1.73, Solana CLI >= 1.16 and Anchor CLI >= 0.28.0
+1. [Setup Rust >= 1.73, Solana CLI >= 1.16 and Anchor CLI >= 0.28.0](https://www.anchor-lang.com/docs/installation)
 2. `git clone https://github.com/gabrielkoerich/lulo-cpi-example.git && cd lulo-cpi-example`
 3. `yarn`
 4. `anchor test`
