@@ -1,12 +1,12 @@
-# [Lulo](https://lulo.fi) Example CPI Integration
+# Lulo Example CPI Integration
 
 This program is an example of User Vaults.
 
 Users can deposit to vaults and can transfer the amount to [Lulo](https://lulo.fi) via CPI to earn interest.
 
-Users can withdraw from their Vault, if the vault has enought amount it sends directly to the user. Otherwise it needs to requests to [Lulo](https://lulo.fi) via CPI which will send the withdraw amount later in a async operation.
+Users can withdraw from their Vault, if the vault has enought amount it sends directly to the user. Otherwise it needs to requests to Lulo via CPI which will send the withdraw amount later in a async operation.
 
-This idea can be adapted to a Protocol Reserve/Vault where only the program admin can deposit, transfer to [Lulo](https://lulo.fi) and withdraw back to the program.
+This idea can be adapted to a Protocol Reserve/Vault where only the program admin can deposit, transfer to lulo and withdraw back to the program.
 
 ### Run
 
