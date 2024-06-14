@@ -1,5 +1,5 @@
 [workspace]
-members = ["programs/lulo-integration"]
+members = ["programs/vault"]
 
 [profile.release]
 overflow-checks = true

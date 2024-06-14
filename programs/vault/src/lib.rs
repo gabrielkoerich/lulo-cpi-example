@@ -7,9 +7,7 @@ use anchor_spl::{
 declare_id!("7YMgh7tHNP1mahFrpL4GYT6GeCQ3KmyM2gZCirJF2epV");
 
 #[program]
-pub mod lulo_integration {
-
-    use lulo_cpi::cpi::accounts::InitiateDeposit;
+pub mod vault {
 
     use super::*;
 
@@ -35,23 +33,29 @@ pub mod lulo_integration {
                 },
             ),
             amount,
-        )?;
+        )
+    }
 
-        Ok(())
+    pub fn withdraw_vault(ctx: Context<WithdrawVault>, amount: u64) -> Result<()> {
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.vault_token_account.to_account_info(),
+                    to: ctx.accounts.owner_token_account.to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                &[&ctx.accounts.vault.signer_seeds()],
+            ),
+            amount,
+        )
     }
 
     pub fn lulo_deposit(ctx: Context<LuloDeposit>, amount: u64) -> Result<()> {
-        let vault = &ctx.accounts.vault;
-        let owner = &ctx.accounts.owner;
-        // let fee_payer = &ctx.accounts.fee_payer;
-
-        msg!("owner: {:?}", owner);
-        // msg!("fee_payer: {:?}", fee_payer);
-
         lulo_cpi::cpi::initiate_deposit(
             CpiContext::new_with_signer(
                 ctx.accounts.lulo_program.to_account_info(),
-                InitiateDeposit {
+                lulo_cpi::cpi::accounts::InitiateDeposit {
                     owner: ctx.accounts.vault.to_account_info(),
                     fee_payer: ctx.accounts.owner.to_account_info(),
                     owner_token_account: ctx.accounts.vault_token_account.to_account_info(),
@@ -67,15 +71,41 @@ pub mod lulo_integration {
                         .associated_token_program
                         .to_account_info(),
                 },
-                &[&vault.signer_seeds()],
+                &[&ctx.accounts.vault.signer_seeds()],
             ),
             amount,
             None, // allowed protocols, None = All protocols
             None, // end_date, None = no end_date
             None, // return_type
-        )?;
+        )
+    }
 
-        Ok(())
+    pub fn lulo_withdraw(ctx: Context<LuloWithdraw>, amount: u64) -> Result<()> {
+        lulo_cpi::cpi::initiate_withdraw(
+            CpiContext::new_with_signer(
+                ctx.accounts.lulo_program.to_account_info(),
+                lulo_cpi::cpi::accounts::InitiateWithdraw {
+                    owner: ctx.accounts.vault.to_account_info(),
+                    fee_payer: ctx.accounts.owner.to_account_info(),
+                    owner_token_account: ctx.accounts.vault_token_account.to_account_info(),
+                    user_account: ctx.accounts.lulo_user_account.to_account_info(),
+                    flex_user_token_account: ctx.accounts.lulo_user_token_account.to_account_info(),
+                    mint_address: ctx.accounts.mint_address.to_account_info(),
+                    promotion_reserve: ctx.accounts.lulo_promotion_reserve.to_account_info(),
+                    flex_program: ctx.accounts.lulo_program.to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    associated_token_program: ctx
+                        .accounts
+                        .associated_token_program
+                        .to_account_info(),
+                },
+                &[&ctx.accounts.vault.signer_seeds()],
+            ),
+            amount, // withdraw_amount
+            false,  // withdraw_all
+            None,   // return_type
+        )
     }
 }
 
@@ -107,14 +137,11 @@ pub struct InitializeVault<'info> {
     pub owner: Signer<'info>,
 
     #[account(mut)]
-    pub fee_payer: Signer<'info>,
-
-    #[account(mut)]
     pub mint_address: Box<Account<'info, Mint>>,
 
     #[account(
         init,
-        payer = fee_payer,
+        payer = owner,
         space = 8 + Vault::LEN,
         seeds = [
             b"vault",
@@ -133,9 +160,6 @@ pub struct InitializeVault<'info> {
 pub struct DepositVault<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
-
-    #[account(mut)]
-    pub fee_payer: Signer<'info>,
 
     #[account(
         seeds = [
@@ -160,7 +184,7 @@ pub struct DepositVault<'info> {
 
     #[account(
 		init_if_needed,
-		payer = fee_payer,
+		payer = owner,
 	    associated_token::mint = mint_address,
 	    associated_token::authority = vault,
 	)]
@@ -173,7 +197,95 @@ pub struct DepositVault<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(amount: u64)]
+pub struct WithdrawVault<'info> {
+    #[account(mut)]
+    pub owner: Signer<'info>,
+
+    #[account(
+        seeds = [
+            b"vault",
+            mint_address.key().as_ref(),
+            owner.key().as_ref(),
+        ],
+        bump = vault.bump[0],
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub mint_address: Box<Account<'info, Mint>>,
+
+    #[account(
+	    mut,
+	    token::mint = mint_address,
+	    token::authority = owner,
+	)]
+    pub owner_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+		mut,
+	    associated_token::mint = mint_address,
+	    associated_token::authority = vault,
+		constraint = vault_token_account.amount >= amount
+	)]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    pub system_program: Program<'info, System>,
+
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[derive(Accounts)]
+#[instruction(amount: u64)]
 pub struct LuloDeposit<'info> {
+    #[account(mut)]
+    pub owner: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [
+            b"vault",
+            mint_address.key().as_ref(),
+            owner.key().as_ref(),
+        ],
+        bump = vault.bump[0],
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(
+		mut,
+	    associated_token::mint = mint_address,
+	    associated_token::authority = vault,
+		constraint = vault_token_account.amount >= amount
+	)]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account()]
+    pub mint_address: Account<'info, Mint>,
+
+    #[account(mut)]
+    /// CHECK: cpi
+    pub lulo_user_account: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    /// CHECK: cpi
+    pub lulo_user_token_account: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    /// CHECK: CPI
+    pub lulo_promotion_reserve: UncheckedAccount<'info>,
+
+    #[account(address = lulo_cpi::ID)]
+    /// CHECK: CPI
+    pub lulo_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[derive(Accounts)]
+pub struct LuloWithdraw<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
 

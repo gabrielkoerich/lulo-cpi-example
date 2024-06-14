@@ -1301,16 +1301,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lulo-integration"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "lulo-cpi",
- "solana-program",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2313,6 +2303,16 @@ checksum = "0200d0fc04d809396c2ad43f3c95da3582a2556eba8d453c1087f4120ee352ff"
 dependencies = [
  "fnv",
  "lazy_static",
+]
+
+[[package]]
+name = "vault"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "lulo-cpi",
+ "solana-program",
 ]
 
 [[package]]

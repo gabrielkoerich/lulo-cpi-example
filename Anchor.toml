@@ -2,7 +2,7 @@
 seeds = true
 skip-lint = false
 [programs.localnet]
-lulo_integration = "7YMgh7tHNP1mahFrpL4GYT6GeCQ3KmyM2gZCirJF2epV"
+vault = "7YMgh7tHNP1mahFrpL4GYT6GeCQ3KmyM2gZCirJF2epV"
 
 [registry]
 url = "https://api.apr.dev"
@@ -12,10 +12,10 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = ["programs/lulo-integration"]
+members = ["programs/vault"]
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
 
 [test]
 startup_wait = 12000
