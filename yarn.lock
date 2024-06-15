@@ -207,7 +207,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/spl-token-metadata@npm:^0.1.2":
+"@solana/spl-token-group@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "@solana/spl-token-group@npm:0.0.4"
+  dependencies:
+    "@solana/codecs": 2.0.0-preview.2
+    "@solana/spl-type-length-value": 0.1.0
+  peerDependencies:
+    "@solana/web3.js": ^1.91.6
+  checksum: 37fd8a20a9249dc01398e98d6ee40258bef6de4953b668210497f11f5239ec3d20009668676d7029e5783204e7c8d2c2f48f23b3415b4fbd7fd204e9659fcc07
+  languageName: node
+  linkType: hard
+
+"@solana/spl-token-metadata@npm:^0.1.4":
   version: 0.1.4
   resolution: "@solana/spl-token-metadata@npm:0.1.4"
   dependencies:
@@ -219,17 +231,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/spl-token@npm:^0.3.8":
-  version: 0.3.11
-  resolution: "@solana/spl-token@npm:0.3.11"
+"@solana/spl-token@npm:^0.4.6":
+  version: 0.4.6
+  resolution: "@solana/spl-token@npm:0.4.6"
   dependencies:
     "@solana/buffer-layout": ^4.0.0
     "@solana/buffer-layout-utils": ^0.2.0
-    "@solana/spl-token-metadata": ^0.1.2
+    "@solana/spl-token-group": ^0.0.4
+    "@solana/spl-token-metadata": ^0.1.4
     buffer: ^6.0.3
   peerDependencies:
-    "@solana/web3.js": ^1.88.0
-  checksum: 84faef5e8ed798e21870728817f650d572a0d0b8c8ac6591f75325d7e89831df396f48384083a65f8b79c30ea4cbfabd0ccb4fbc7a4f20953d133b746ed8b99d
+    "@solana/web3.js": ^1.91.6
+  checksum: 4111538c00ff3c3c406352d04a9e321812fe5f0c28a31f144cbcf5a0f4be9d3b0a13d2221b8a96679fed9832113405ceefcc06687d1b081f601c18bc2cc1f608
   languageName: node
   linkType: hard
 
@@ -1928,7 +1941,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@coral-xyz/anchor": ^0.28.0
-    "@solana/spl-token": ^0.3.8
+    "@solana/spl-token": ^0.4.6
     "@solana/web3.js": ^1.78.4
     "@types/bn.js": ^5.1.0
     "@types/chai": ^4.3.0
