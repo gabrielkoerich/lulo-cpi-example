@@ -16,7 +16,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
+anchor-lang = { version = "0.30.0", features = ["init-if-needed"] }
 anchor-spl = "0.28.0"
 lulo-cpi = { path = "../lulo" }
 solana-program = "1.16.12"
