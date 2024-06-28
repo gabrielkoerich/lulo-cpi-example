@@ -201,21 +201,13 @@ pub mod vault {
         let drift_state = &remaining_accounts[2];
         let drift_signer = &remaining_accounts[3];
         let spot_market_vault = &remaining_accounts[4];
-        let drift_program = &remaining_accounts[5];
-
-        // TODO this should be handled on lulo program side?
-        let market_index = 1;
-
-        // Considering 2 markets
-        let oracles = &remaining_accounts[6..6 + market_index + 1];
-        let spot_markets = &remaining_accounts[8..8 + market_index + 1];
-
-        msg!("oracles {}", oracles.len());
-        msg!("spot_markets {}", spot_markets.len());
+        let spot_market = &remaining_accounts[5];
+        let oracle = &remaining_accounts[6];
+        let drift_program = &remaining_accounts[7];
 
         let signer_seeds: &[&[&[u8]]] = &[&vault.signer_seeds()];
 
-        let cpi_remaining_accounts = [oracles, spot_markets].concat();
+        let cpi_remaining_accounts = [[oracle.clone()], [spot_market.clone()]].concat();
 
         msg!("cpi_remaining_accounts: {}", cpi_remaining_accounts.len());
 
@@ -238,9 +230,12 @@ pub mod vault {
                 associated_token_program: associated_token_program.to_account_info(),
                 system_program: system_program.to_account_info(),
             },
-            remaining_accounts: [oracles, spot_markets].concat(),
+            remaining_accounts: cpi_remaining_accounts,
             signer_seeds,
         };
+
+        // TODO this should be handled on lulo program side?
+        let market_index = 1;
 
         lulo_cpi::cpi::withdraw_drift(cpi, market_index as u16, amount, true, false)
     }
