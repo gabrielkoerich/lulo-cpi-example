@@ -10,7 +10,6 @@ import { ComputeBudgetProgram, PublicKey, SystemProgram } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Vault } from '../target/types/vault'
 import {
-    DRIFT_PROGRAM,
     DRIFT_PROGRAM_ID,
     getDriftSpotMarketVaultPublicKey,
     getDriftStateAccountPublicKey,
