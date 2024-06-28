@@ -112,8 +112,7 @@ pub mod vault {
     ) -> Result<()> {
         let remaining_accounts = ctx.remaining_accounts;
 
-        let signer = &ctx.accounts.vault;
-        let owner = &ctx.accounts.vault;
+        let vault = &ctx.accounts.vault;
         let user_account = &ctx.accounts.lulo_user_account;
         let flex_user_token_account = &ctx.accounts.lulo_user_token_account;
         let mint_address = &ctx.accounts.mint_address;
@@ -135,8 +134,8 @@ pub mod vault {
             lulo_cpi::cpi::init_drift_user_account(CpiContext::new_with_signer(
                 ctx.accounts.lulo_program.to_account_info(),
                 lulo_cpi::cpi::accounts::InitDriftUserAccount {
-                    signer: signer.to_account_info(),
-                    owner: owner.to_account_info(),
+                    signer: vault.to_account_info(),
+                    owner: vault.to_account_info(),
                     drift_user: drift_user.to_account_info(),
                     drift_user_stats: drift_user_stats.to_account_info(),
                     drift_state: drift_state.to_account_info(),
@@ -155,8 +154,8 @@ pub mod vault {
             CpiContext::new_with_signer(
                 ctx.accounts.lulo_program.to_account_info(),
                 lulo_cpi::cpi::accounts::DepositDrift {
-                    signer: signer.to_account_info(),
-                    owner: owner.to_account_info(),
+                    signer: vault.to_account_info(),
+                    owner: vault.to_account_info(),
                     drift_user: drift_user.to_account_info(),
                     drift_user_stats: drift_user_stats.to_account_info(),
                     drift_state: drift_state.to_account_info(),
@@ -186,8 +185,7 @@ pub mod vault {
     ) -> Result<()> {
         let remaining_accounts = ctx.remaining_accounts;
 
-        let signer = &ctx.accounts.vault;
-        let owner = &ctx.accounts.vault;
+        let vault = &ctx.accounts.vault;
         let user_account = &ctx.accounts.lulo_user_account;
         let flex_user_token_account = &ctx.accounts.lulo_user_token_account;
         let mint_address = &ctx.accounts.mint_address;
@@ -196,7 +194,7 @@ pub mod vault {
         let associated_token_program = &ctx.accounts.associated_token_program;
         let system_program = &ctx.accounts.system_program;
 
-        msg!("remaining_accounts len: {:?}", remaining_accounts.len());
+        msg!("remaining_accounts {:?}", remaining_accounts.len());
 
         let drift_user = &remaining_accounts[0];
         let drift_user_stats = &remaining_accounts[1];
@@ -205,29 +203,27 @@ pub mod vault {
         let spot_market_vault = &remaining_accounts[4];
         let drift_program = &remaining_accounts[5];
 
+        // TODO this should be handled on lulo program side?
+        let market_index = 1;
+
         // Considering 2 markets
-        let oracles = &remaining_accounts[6..8];
-        let spot_markets = &remaining_accounts[8..10];
+        let oracles = &remaining_accounts[6..6 + market_index + 1];
+        let spot_markets = &remaining_accounts[8..8 + market_index + 1];
 
-        msg!("oracles {}: {:?}", oracles.len(), oracles);
-        msg!("spot_markets {}: {:?}", spot_markets.len(), spot_markets);
+        msg!("oracles {}", oracles.len());
+        msg!("spot_markets {}", spot_markets.len());
 
-        // let signer_seeds = &[&ctx.accounts.vault.signer_seeds()];
-        let signer_seeds: &[&[&[u8]]] = &[&owner.signer_seeds()];
+        let signer_seeds: &[&[&[u8]]] = &[&vault.signer_seeds()];
 
         let cpi_remaining_accounts = [oracles, spot_markets].concat();
 
-        msg!(
-            "cpi_remaining_accounts len: {:?}",
-            cpi_remaining_accounts.len()
-        );
-        msg!("cpi_remaining_accounts: {:?}", cpi_remaining_accounts);
+        msg!("cpi_remaining_accounts: {}", cpi_remaining_accounts.len());
 
         let cpi = CpiContext {
             program: ctx.accounts.lulo_program.to_account_info(),
             accounts: lulo_cpi::cpi::accounts::WithdrawDrift {
-                signer: signer.to_account_info(),
-                owner: owner.to_account_info(),
+                signer: vault.to_account_info(),
+                owner: vault.to_account_info(),
                 drift_user: drift_user.to_account_info(),
                 drift_user_stats: drift_user_stats.to_account_info(),
                 drift_state: drift_state.to_account_info(),
@@ -246,11 +242,7 @@ pub mod vault {
             signer_seeds,
         };
 
-        lulo_cpi::cpi::withdraw_drift(
-            cpi,
-            1, // TODO this should be handled on lulo program side, we shouldnt need to pass a index here
-            amount, true, false,
-        )
+        lulo_cpi::cpi::withdraw_drift(cpi, market_index as u16, amount, true, false)
     }
 }
 
