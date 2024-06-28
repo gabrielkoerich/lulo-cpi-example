@@ -105,6 +105,80 @@ pub mod vault {
             None,   // return_type
         )
     }
+
+    pub fn lulo_deposit_drift<'info>(
+        ctx: Context<'_, '_, '_, 'info, LuloDeposit<'info>>,
+        amount: u64,
+    ) -> Result<()> {
+        let remaining_accounts = ctx.remaining_accounts;
+
+        let signer = &ctx.accounts.vault;
+        let owner = &ctx.accounts.vault;
+        let user_account = &ctx.accounts.lulo_user_account;
+        let flex_user_token_account = &ctx.accounts.lulo_user_token_account;
+        let mint_address = &ctx.accounts.mint_address;
+        let fee_payer = &ctx.accounts.owner;
+        let promotion_reserve = &ctx.accounts.lulo_promotion_reserve;
+        let token_program = &ctx.accounts.token_program;
+        let system_program = &ctx.accounts.system_program;
+        let rent = &ctx.accounts.rent;
+
+        let drift_user = &remaining_accounts[0];
+        let drift_user_stats = &remaining_accounts[1];
+        let drift_state = &remaining_accounts[2];
+        let spot_market_vault = &remaining_accounts[3];
+        let spot_market = &remaining_accounts[4];
+        let oracle = &remaining_accounts[5];
+        let drift_program = &remaining_accounts[6];
+
+        if drift_user.data_is_empty() {
+            lulo_cpi::cpi::init_drift_user_account(CpiContext::new_with_signer(
+                ctx.accounts.lulo_program.to_account_info(),
+                lulo_cpi::cpi::accounts::InitDriftUserAccount {
+                    signer: signer.to_account_info(),
+                    owner: owner.to_account_info(),
+                    drift_user: drift_user.to_account_info(),
+                    drift_user_stats: drift_user_stats.to_account_info(),
+                    drift_state: drift_state.to_account_info(),
+                    user_account: user_account.to_account_info(),
+                    promotion_reserve: promotion_reserve.to_account_info(),
+                    fee_payer: fee_payer.to_account_info(),
+                    drift_program: drift_program.to_account_info(),
+                    rent: rent.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                },
+                &[&ctx.accounts.vault.signer_seeds()],
+            ))?;
+        }
+
+        lulo_cpi::cpi::deposit_drift(
+            CpiContext::new_with_signer(
+                ctx.accounts.lulo_program.to_account_info(),
+                lulo_cpi::cpi::accounts::DepositDrift {
+                    signer: signer.to_account_info(),
+                    owner: owner.to_account_info(),
+                    drift_user: drift_user.to_account_info(),
+                    drift_user_stats: drift_user_stats.to_account_info(),
+                    drift_state: drift_state.to_account_info(),
+                    spot_market_vault: spot_market_vault.to_account_info(),
+                    user_account: user_account.to_account_info(),
+                    flex_user_token_account: flex_user_token_account.to_account_info(),
+                    mint_address: mint_address.to_account_info(),
+                    spot_market: spot_market.to_account_info(),
+                    oracle: oracle.to_account_info(),
+                    fee_payer: fee_payer.to_account_info(),
+                    drift_program: drift_program.to_account_info(),
+                    token_program: token_program.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                },
+                &[&ctx.accounts.vault.signer_seeds()],
+            ),
+            1,
+            amount,
+            false,
+            false,
+        )
+    }
 }
 
 #[account]
@@ -280,6 +354,7 @@ pub struct LuloDeposit<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
