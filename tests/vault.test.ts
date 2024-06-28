@@ -390,22 +390,22 @@ describe('lulo vault', () => {
 
         const marketIndex = 1
         const spotMarketVault = getDriftSpotMarketVaultPublicKey(marketIndex)
-        const spotMarkets = [
-            new PublicKey('6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3'),
-            new PublicKey('3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh'),
-        ]
+        // const spotMarkets = [
+        //     // new PublicKey('6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3'),
+        //     new PublicKey('3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh'),
+        // ]
 
-        const oracles = [
-            new PublicKey('Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD'),
-            new PublicKey('H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG'),
-        ]
+        // const oracles = [
+        //     // new PublicKey('Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD'),
+        //     new PublicKey('H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG'),
+        // ]
 
-        // const spotMarket = new PublicKey(
-        //     '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
-        // )
-        // const oracle = new PublicKey(
-        //     'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
-        // )
+        const spotMarket = new PublicKey(
+            '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
+        )
+        const oracle = new PublicKey(
+            'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
+        )
 
         const withdrawTx = await program.methods
             .luloWithdrawDrift(amount)
@@ -451,20 +451,20 @@ describe('lulo vault', () => {
                     isWritable: true,
                 },
                 {
+                    pubkey: spotMarket,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: oracle,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                {
                     pubkey: DRIFT_PROGRAM_ID,
                     isSigner: false,
                     isWritable: false,
                 },
-                ...oracles.map((pubkey) => ({
-                    pubkey,
-                    isSigner: false,
-                    isWritable: false,
-                })),
-                ...spotMarkets.map((pubkey) => ({
-                    pubkey,
-                    isSigner: false,
-                    isWritable: true,
-                })),
             ])
             .rpc({ skipPreflight: true })
 
