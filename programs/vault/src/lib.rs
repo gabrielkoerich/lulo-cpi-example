@@ -173,10 +173,83 @@ pub mod vault {
                 },
                 &[&ctx.accounts.vault.signer_seeds()],
             ),
-            1,
+            1, // TODO this should be handled on lulo program side, we shouldnt need to pass a index here
             amount,
             false,
             false,
+        )
+    }
+
+    pub fn lulo_withdraw_drift<'info>(
+        ctx: Context<'_, '_, '_, 'info, LuloWithdraw<'info>>,
+        amount: u64,
+    ) -> Result<()> {
+        let remaining_accounts = ctx.remaining_accounts;
+
+        let signer = &ctx.accounts.vault;
+        let owner = &ctx.accounts.vault;
+        let user_account = &ctx.accounts.lulo_user_account;
+        let flex_user_token_account = &ctx.accounts.lulo_user_token_account;
+        let mint_address = &ctx.accounts.mint_address;
+        let fee_payer = &ctx.accounts.owner;
+        let token_program = &ctx.accounts.token_program;
+        let associated_token_program = &ctx.accounts.associated_token_program;
+        let system_program = &ctx.accounts.system_program;
+
+        msg!("remaining_accounts len: {:?}", remaining_accounts.len());
+
+        let drift_user = &remaining_accounts[0];
+        let drift_user_stats = &remaining_accounts[1];
+        let drift_state = &remaining_accounts[2];
+        let drift_signer = &remaining_accounts[3];
+        let spot_market_vault = &remaining_accounts[4];
+        let drift_program = &remaining_accounts[5];
+
+        // Considering 2 markets
+        let oracles = &remaining_accounts[6..8];
+        let spot_markets = &remaining_accounts[8..10];
+
+        msg!("oracles {}: {:?}", oracles.len(), oracles);
+        msg!("spot_markets {}: {:?}", spot_markets.len(), spot_markets);
+
+        // let signer_seeds = &[&ctx.accounts.vault.signer_seeds()];
+        let signer_seeds: &[&[&[u8]]] = &[&owner.signer_seeds()];
+
+        let cpi_remaining_accounts = [oracles, spot_markets].concat();
+
+        msg!(
+            "cpi_remaining_accounts len: {:?}",
+            cpi_remaining_accounts.len()
+        );
+        msg!("cpi_remaining_accounts: {:?}", cpi_remaining_accounts);
+
+        let cpi = CpiContext {
+            program: ctx.accounts.lulo_program.to_account_info(),
+            accounts: lulo_cpi::cpi::accounts::WithdrawDrift {
+                signer: signer.to_account_info(),
+                owner: owner.to_account_info(),
+                drift_user: drift_user.to_account_info(),
+                drift_user_stats: drift_user_stats.to_account_info(),
+                drift_state: drift_state.to_account_info(),
+                drift_signer: drift_signer.to_account_info(),
+                spot_market_vault: spot_market_vault.to_account_info(),
+                user_account: user_account.to_account_info(),
+                flex_user_token_account: flex_user_token_account.to_account_info(),
+                mint_address: mint_address.to_account_info(),
+                fee_payer: fee_payer.to_account_info(),
+                drift_program: drift_program.to_account_info(),
+                token_program: token_program.to_account_info(),
+                associated_token_program: associated_token_program.to_account_info(),
+                system_program: system_program.to_account_info(),
+            },
+            remaining_accounts: [oracles, spot_markets].concat(),
+            signer_seeds,
+        };
+
+        lulo_cpi::cpi::withdraw_drift(
+            cpi,
+            1, // TODO this should be handled on lulo program side, we shouldnt need to pass a index here
+            amount, true, false,
         )
     }
 }
