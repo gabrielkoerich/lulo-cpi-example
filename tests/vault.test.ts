@@ -6,7 +6,7 @@ import {
     getAssociatedTokenAddressSync,
     NATIVE_MINT,
 } from '@solana/spl-token'
-import { PublicKey, SystemProgram } from '@solana/web3.js'
+import { ComputeBudgetProgram, PublicKey, SystemProgram } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Vault } from '../target/types/vault'
 import {
@@ -282,16 +282,11 @@ describe('lulo vault', () => {
             true,
         )
 
-        const driftProgram = new PublicKey(
-            'dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH',
-        )
-
         const driftUser = getDriftUserAccountPublicKey(luloUserAccount)
         const driftUserStats =
             getDriftUserStatsAccountPublicKey(luloUserAccount)
         const driftState = getDriftStateAccountPublicKey()
 
-        // const market = getDriftSpotMarketByMint(mintAddress)
         const marketIndex = 1
         const spotMarketVault = getDriftSpotMarketVaultPublicKey(marketIndex)
         const spotMarket = new PublicKey(
@@ -301,7 +296,7 @@ describe('lulo vault', () => {
             'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
         )
 
-        const luloDepositTx = await program.methods
+        const depositTx = await program.methods
             .luloDepositDrift(amount)
             .accounts({
                 owner,
@@ -313,6 +308,7 @@ describe('lulo vault', () => {
                 luloPromotionReserve: LULO_RESERVE,
                 luloProgram: LULO_FLEXLEND_PROGRAM,
             })
+            // maybe we could do an API for remaining accounts?
             .remainingAccounts([
                 {
                     pubkey: driftUser,
@@ -352,6 +348,126 @@ describe('lulo vault', () => {
             ])
             .rpc({ skipPreflight: true })
 
-        console.log({ luloDepositTx })
+        console.log({ depositTx })
+    })
+
+    it('direct drift withdraw', async () => {
+        const amount = new BN(1 * 10 ** 9)
+
+        const owner = program.provider.publicKey
+
+        const vault = PublicKey.findProgramAddressSync(
+            [Buffer.from('vault'), NATIVE_MINT.toBuffer(), owner.toBuffer()],
+            program.programId,
+        )[0]
+
+        const vaultTokenAccount = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            vault,
+            true,
+        )
+
+        const luloUserAccount = PublicKey.findProgramAddressSync(
+            [Buffer.from('flexlend'), vault.toBuffer()],
+            LULO_FLEXLEND_PROGRAM,
+        )[0]
+
+        const luloUserTokenAccount = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            luloUserAccount,
+            true,
+        )
+
+        const driftUser = getDriftUserAccountPublicKey(luloUserAccount)
+        const driftUserStats =
+            getDriftUserStatsAccountPublicKey(luloUserAccount)
+        const driftState = getDriftStateAccountPublicKey()
+        // const driftSigner = getDriftSignerPublicKey(DRIFT_PROGRAM)
+
+        const driftSigner = new PublicKey(
+            'JCNCMFXo5M5qwUPg2Utu1u6YWp3MbygxqBsBeXXJfrw',
+        )
+
+        const marketIndex = 1
+        const spotMarketVault = getDriftSpotMarketVaultPublicKey(marketIndex)
+        const spotMarkets = [
+            new PublicKey('6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3'),
+            new PublicKey('3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh'),
+        ]
+
+        const oracles = [
+            new PublicKey('Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD'),
+            new PublicKey('H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG'),
+        ]
+
+        // const spotMarket = new PublicKey(
+        //     '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
+        // )
+        // const oracle = new PublicKey(
+        //     'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
+        // )
+
+        const withdrawTx = await program.methods
+            .luloWithdrawDrift(amount)
+            .preInstructions([
+                ComputeBudgetProgram.setComputeUnitLimit({
+                    units: 1_000_000,
+                }),
+            ])
+            .accounts({
+                owner,
+                vault,
+                vaultTokenAccount,
+                mintAddress: NATIVE_MINT,
+                luloUserAccount,
+                luloUserTokenAccount,
+                luloPromotionReserve: LULO_RESERVE,
+                luloProgram: LULO_FLEXLEND_PROGRAM,
+            })
+            .remainingAccounts([
+                {
+                    pubkey: driftUser,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftUserStats,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftState,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftSigner,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                {
+                    pubkey: spotMarketVault,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: DRIFT_PROGRAM_ID,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                ...oracles.map((pubkey) => ({
+                    pubkey,
+                    isSigner: false,
+                    isWritable: false,
+                })),
+                ...spotMarkets.map((pubkey) => ({
+                    pubkey,
+                    isSigner: false,
+                    isWritable: true,
+                })),
+            ])
+            .rpc({ skipPreflight: true })
+
+        console.log({ withdrawTx })
     })
 })
