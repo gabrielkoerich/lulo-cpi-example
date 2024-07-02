@@ -407,7 +407,7 @@ describe('lulo vault', () => {
         )
 
         const withdrawTx = await program.methods
-            .luloWithdrawDrift(amount)
+            .luloWithdrawSync('drift', amount)
             .preInstructions([
                 ComputeBudgetProgram.setComputeUnitLimit({
                     units: 1_000_000,
