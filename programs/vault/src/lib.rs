@@ -179,65 +179,42 @@ pub mod vault {
         )
     }
 
-    pub fn lulo_withdraw_drift<'info>(
+    pub fn lulo_withdraw_sync<'info>(
         ctx: Context<'_, '_, '_, 'info, LuloWithdraw<'info>>,
+        protocol: String,
         amount: u64,
     ) -> Result<()> {
-        let remaining_accounts = ctx.remaining_accounts;
-
         let vault = &ctx.accounts.vault;
-        let user_account = &ctx.accounts.lulo_user_account;
-        let flex_user_token_account = &ctx.accounts.lulo_user_token_account;
-        let mint_address = &ctx.accounts.mint_address;
         let fee_payer = &ctx.accounts.owner;
-        let token_program = &ctx.accounts.token_program;
-        let associated_token_program = &ctx.accounts.associated_token_program;
-        let system_program = &ctx.accounts.system_program;
 
-        msg!("remaining_accounts {:?}", remaining_accounts.len());
-
-        let drift_user = &remaining_accounts[0];
-        let drift_user_stats = &remaining_accounts[1];
-        let drift_state = &remaining_accounts[2];
-        let drift_signer = &remaining_accounts[3];
-        let spot_market_vault = &remaining_accounts[4];
-        let spot_market = &remaining_accounts[5];
-        let oracle = &remaining_accounts[6];
-        let drift_program = &remaining_accounts[7];
+        msg!("remaining_accounts {:?}", ctx.remaining_accounts.len());
 
         let signer_seeds: &[&[&[u8]]] = &[&vault.signer_seeds()];
 
-        let cpi_remaining_accounts = [[oracle.clone()], [spot_market.clone()]].concat();
-
-        msg!("cpi_remaining_accounts: {}", cpi_remaining_accounts.len());
-
-        let cpi = CpiContext {
-            program: ctx.accounts.lulo_program.to_account_info(),
-            accounts: lulo_cpi::cpi::accounts::WithdrawDrift {
-                signer: vault.to_account_info(),
-                owner: vault.to_account_info(),
-                drift_user: drift_user.to_account_info(),
-                drift_user_stats: drift_user_stats.to_account_info(),
-                drift_state: drift_state.to_account_info(),
-                drift_signer: drift_signer.to_account_info(),
-                spot_market_vault: spot_market_vault.to_account_info(),
-                user_account: user_account.to_account_info(),
-                flex_user_token_account: flex_user_token_account.to_account_info(),
-                mint_address: mint_address.to_account_info(),
-                fee_payer: fee_payer.to_account_info(),
-                drift_program: drift_program.to_account_info(),
-                token_program: token_program.to_account_info(),
-                associated_token_program: associated_token_program.to_account_info(),
-                system_program: system_program.to_account_info(),
+        lulo_cpi::cpi::sync_withdraw(
+            CpiContext {
+                program: ctx.accounts.lulo_program.to_account_info(),
+                accounts: lulo_cpi::cpi::accounts::SyncWithdraw {
+                    owner: vault.to_account_info(),
+                    fee_payer: fee_payer.to_account_info(),
+                    owner_token_account: ctx.accounts.vault_token_account.to_account_info(),
+                    user_account: ctx.accounts.lulo_user_account.to_account_info(),
+                    flex_user_token_account: ctx.accounts.lulo_user_token_account.to_account_info(),
+                    mint_address: ctx.accounts.mint_address.to_account_info(),
+                    flex_program: ctx.accounts.lulo_program.to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                    associated_token_program: ctx
+                        .accounts
+                        .associated_token_program
+                        .to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+                remaining_accounts: ctx.remaining_accounts.to_vec(),
+                signer_seeds,
             },
-            remaining_accounts: cpi_remaining_accounts,
-            signer_seeds,
-        };
-
-        // TODO this should be handled on lulo program side?
-        let market_index = 1;
-
-        lulo_cpi::cpi::withdraw_drift(cpi, market_index as u16, amount, true, false)
+            protocol,
+            amount,
+        )
     }
 }
 
