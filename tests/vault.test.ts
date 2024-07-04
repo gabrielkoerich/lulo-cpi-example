@@ -492,6 +492,6 @@ describe('lulo vault', () => {
         ).value.uiAmount
 
         // ~1 SOL withdrawn
-        assert.closeTo(vaultEndBalance - vaultStartBalance, 1, 0.01)
+        assert.closeTo(vaultEndBalance - vaultStartBalance, 1, 0.0001)
     })
 })
