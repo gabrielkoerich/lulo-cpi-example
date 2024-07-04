@@ -383,12 +383,24 @@ describe('lulo vault', () => {
         const driftState = getDriftStateAccountPublicKey()
         // const driftSigner = getDriftSignerPublicKey(DRIFT_PROGRAM)
 
+        console.log({
+            vault,
+            vaultTokenAccount,
+            luloUserAccount,
+            luloUserTokenAccount,
+            driftUser,
+            driftUserStats,
+            driftState,
+        })
+
         const driftSigner = new PublicKey(
             'JCNCMFXo5M5qwUPg2Utu1u6YWp3MbygxqBsBeXXJfrw',
         )
 
         const marketIndex = 1
         const spotMarketVault = getDriftSpotMarketVaultPublicKey(marketIndex)
+
+        console.log({ spotMarketVault })
         // const spotMarkets = [
         //     // new PublicKey('6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3'),
         //     new PublicKey('3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh'),
@@ -405,6 +417,12 @@ describe('lulo vault', () => {
         const oracle = new PublicKey(
             'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
         )
+
+        const vaultStartBalance = (
+            await connection.getTokenAccountBalance(vaultTokenAccount)
+        ).value.uiAmount
+
+        console.log({ vaultStartBalance })
 
         const withdrawTx = await program.methods
             .luloWithdrawSync('drift', amount)
@@ -468,5 +486,12 @@ describe('lulo vault', () => {
             .rpc({ skipPreflight: true })
 
         console.log({ withdrawTx })
+
+        const vaultEndBalance = (
+            await connection.getTokenAccountBalance(vaultTokenAccount)
+        ).value.uiAmount
+
+        // ~1 SOL withdrawn
+        assert.closeTo(vaultEndBalance - vaultStartBalance, 1, 0.01)
     })
 })
