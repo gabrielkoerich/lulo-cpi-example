@@ -369,6 +369,12 @@
         {
           "name": "amount",
           "type": "u64"
+        },
+        {
+          "name": "withdrawAll",
+          "type": {
+            "option": "bool"
+          }
         }
       ]
     },

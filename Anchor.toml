@@ -26,9 +26,10 @@ ticks_per_slot = 20
 rpc_port = 1899
 faucet_port = 2000
 
-# [[test.genesis]]
-# address = "FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q"
-# program = "tests/flexlend.so"
+[[test.genesis]]
+address = "FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q"
+# program = "../flexlend/target/deploy/flexlend.so"
+program = "tests/flexlend.so"
 
 # Lulo Clones
 [[test.validator.clone]]
