@@ -214,6 +214,7 @@ pub mod vault {
             },
             protocol,
             amount,
+            Some(true), // withdraw_all
         )
     }
 }
