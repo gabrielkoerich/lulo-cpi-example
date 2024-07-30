@@ -81,3 +81,5 @@ address = "Mr2XZwj1NisUur3WZWdERdqnEUMoa9F9pUr52vqHyqj"
 address = "7GGF99Et8AN8bjKug9nh6BJAQ3LKSziD2ceCps89zvQa"
 [[test.validator.clone]]
 address = "7pPeeTqcqYeED7k4ocdeaSx3MAwT56Y7khyCx1zfS8jM"
+[[test.validator.clone]] # SOL new Pyth oracle
+address = "BAtFj4kQttZRVep3UZS2aZRDixkGYgWsbqTBVDbnSsPF"

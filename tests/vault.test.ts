@@ -292,7 +292,7 @@ describe('lulo vault', () => {
             '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
         )
         const oracle = new PublicKey(
-            'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
+            'BAtFj4kQttZRVep3UZS2aZRDixkGYgWsbqTBVDbnSsPF',
         )
 
         const depositTx = await program.methods
@@ -415,7 +415,7 @@ describe('lulo vault', () => {
             '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
         )
         const oracle = new PublicKey(
-            'H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG',
+            'BAtFj4kQttZRVep3UZS2aZRDixkGYgWsbqTBVDbnSsPF',
         )
 
         const vaultStartBalance = (
@@ -468,17 +468,17 @@ describe('lulo vault', () => {
                     isWritable: true,
                 },
                 {
+                    pubkey: DRIFT_PROGRAM_ID,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                {
                     pubkey: spotMarket,
                     isSigner: false,
                     isWritable: true,
                 },
                 {
                     pubkey: oracle,
-                    isSigner: false,
-                    isWritable: false,
-                },
-                {
-                    pubkey: DRIFT_PROGRAM_ID,
                     isSigner: false,
                     isWritable: false,
                 },
