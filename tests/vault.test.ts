@@ -351,17 +351,18 @@ describe('lulo vault', () => {
     })
 
     it('direct drift withdraw', async () => {
+        const mintAddress = NATIVE_MINT
         const amount = new BN(1 * 10 ** 9)
 
         const owner = program.provider.publicKey
 
         const vault = PublicKey.findProgramAddressSync(
-            [Buffer.from('vault'), NATIVE_MINT.toBuffer(), owner.toBuffer()],
+            [Buffer.from('vault'), mintAddress.toBuffer(), owner.toBuffer()],
             program.programId,
         )[0]
 
         const vaultTokenAccount = getAssociatedTokenAddressSync(
-            NATIVE_MINT,
+            mintAddress,
             vault,
             true,
         )
@@ -372,7 +373,7 @@ describe('lulo vault', () => {
         )[0]
 
         const luloUserTokenAccount = getAssociatedTokenAddressSync(
-            NATIVE_MINT,
+            mintAddress,
             luloUserAccount,
             true,
         )
@@ -424,24 +425,29 @@ describe('lulo vault', () => {
 
         console.log({ vaultStartBalance })
 
-        const withdrawTx = await program.methods
-            .luloWithdrawSync('drift', amount)
-            .preInstructions([
-                ComputeBudgetProgram.setComputeUnitLimit({
-                    units: 1_000_000,
-                }),
-            ])
-            .accounts({
-                owner,
-                vault,
-                vaultTokenAccount,
-                mintAddress: NATIVE_MINT,
-                luloUserAccount,
-                luloUserTokenAccount,
-                luloPromotionReserve: LULO_RESERVE,
-                luloProgram: LULO_FLEXLEND_PROGRAM,
-            })
-            .remainingAccounts([
+        let remainingAccounts: any[] = []
+
+        try {
+            // owner is vault here
+            const withdrawParams: any = await (
+                await fetch(
+                    `http://localhost:8080/integration/withdraw-params/drift?mintAddress=${mintAddress.toString()}&owner=${vault.toString()}&amount=1`,
+                )
+            ).json()
+
+            console.log('withdrawParams:', withdrawParams)
+
+            remainingAccounts = withdrawParams.remainingAccounts.map(
+                (a: any) => {
+                    return {
+                        pubkey: new PublicKey(a.pubkey),
+                        isSigner: a.isSigner,
+                        isWritable: a.isWritable,
+                    }
+                },
+            )
+        } catch (e) {
+            remainingAccounts = [
                 {
                     pubkey: driftUser,
                     isSigner: false,
@@ -473,16 +479,38 @@ describe('lulo vault', () => {
                     isWritable: false,
                 },
                 {
-                    pubkey: spotMarket,
+                    pubkey: oracle,
                     isSigner: false,
                     isWritable: true,
                 },
                 {
-                    pubkey: oracle,
+                    pubkey: spotMarket,
                     isSigner: false,
-                    isWritable: false,
+                    isWritable: true,
                 },
+            ]
+        }
+
+        console.log({ remainingAccounts })
+
+        const withdrawTx = await program.methods
+            .luloWithdrawSync('drift', amount)
+            .preInstructions([
+                ComputeBudgetProgram.setComputeUnitLimit({
+                    units: 1_500_000,
+                }),
             ])
+            .accounts({
+                owner,
+                vault,
+                vaultTokenAccount,
+                mintAddress: NATIVE_MINT,
+                luloUserAccount,
+                luloUserTokenAccount,
+                luloPromotionReserve: LULO_RESERVE,
+                luloProgram: LULO_FLEXLEND_PROGRAM,
+            })
+            .remainingAccounts(remainingAccounts)
             .rpc({ skipPreflight: true })
 
         console.log({ withdrawTx })
