@@ -15,7 +15,7 @@ wallet = "~/.config/solana/id.json"
 members = ["programs/vault"]
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts -b"
 
 [test]
 startup_wait = 3000
