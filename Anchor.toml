@@ -15,7 +15,7 @@ wallet = "~/.config/solana/id.json"
 members = ["programs/vault"]
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts -b"
 
 [test]
 startup_wait = 3000
@@ -26,9 +26,10 @@ ticks_per_slot = 20
 rpc_port = 1899
 faucet_port = 2000
 
-# [[test.genesis]]
-# address = "FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q"
-# program = "tests/flexlend.so"
+[[test.genesis]]
+address = "FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q"
+# program = "../flexlend/target/deploy/flexlend.so"
+program = "tests/flexlend.so"
 
 # Lulo Clones
 [[test.validator.clone]]
@@ -37,3 +38,48 @@ address = "FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q"
 address = "4dj7xRvYSm4PgUBkmP86cEQXtXdReZg1BMkKMd8VxREp"
 [[test.validator.clone]]
 address = "4NCKkwUCBRcu7TGxDaEZ6Uw6TvzdDbnvSuYbXLzrLnzv"
+
+####### Drift Clones
+
+[[test.validator.clone]] # PROGRAM ID
+address = "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
+[[test.validator.clone]] # drift state
+address = "5zpq7DvB6UdFFvpmBPspGPNfUGoBRRCE2HHg5u3gxcsN"
+[[test.validator.clone]] # drift spot market vault
+address = "DfYCNezifxAEsQbAJ1b3j6PX3JVBe8fu11KBhxsbw5d2"
+[[test.validator.clone]] # drift signer
+address = "8BnEgHoWFysVcuFFX7QztDmzuH8r5ZFvyP3sYwn1XTh6"
+
+### Drift Oracles
+[[test.validator.clone]]
+address = "Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"
+[[test.validator.clone]]
+address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG" # SOL
+[[test.validator.clone]]
+address = "AFrYBhb5wKQtxRS9UA9YRS4V3dwFm7SqmS6DHKq6YVgo"
+[[test.validator.clone]]
+address = "7yyaeuJ1GGtVBLT2z2xub5ZWYKaNhF28mj1RdV4VDFVk"
+[[test.validator.clone]]
+address = "E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9"
+[[test.validator.clone]]
+address = "g6eRCbboSwK4tSWngn773RCMexr1APQr4uA9bGZBYfo"
+[[test.validator.clone]]
+address = "3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL"
+
+### Drift Spot Markets
+[[test.validator.clone]]
+address = "6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3"
+[[test.validator.clone]]
+address = "3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh" # SOL
+[[test.validator.clone]]
+address = "3fy2oMRJGceC3GAt9zGUBWt8MzjV5XxQDWKYLtiHPevX"
+[[test.validator.clone]]
+address = "6Aq7WBtsZVyumcRxpAoKNyWb97gAzp3be2LeQ9yE6SVX"
+[[test.validator.clone]]
+address = "Mr2XZwj1NisUur3WZWdERdqnEUMoa9F9pUr52vqHyqj"
+[[test.validator.clone]]
+address = "7GGF99Et8AN8bjKug9nh6BJAQ3LKSziD2ceCps89zvQa"
+[[test.validator.clone]]
+address = "7pPeeTqcqYeED7k4ocdeaSx3MAwT56Y7khyCx1zfS8jM"
+[[test.validator.clone]] # SOL new Pyth oracle
+address = "BAtFj4kQttZRVep3UZS2aZRDixkGYgWsbqTBVDbnSsPF"

@@ -6,9 +6,16 @@ import {
     getAssociatedTokenAddressSync,
     NATIVE_MINT,
 } from '@solana/spl-token'
-import { PublicKey, SystemProgram } from '@solana/web3.js'
+import { ComputeBudgetProgram, PublicKey, SystemProgram } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Vault } from '../target/types/vault'
+import {
+    DRIFT_PROGRAM_ID,
+    getDriftSpotMarketVaultPublicKey,
+    getDriftStateAccountPublicKey,
+    getDriftUserAccountPublicKey,
+    getDriftUserStatsAccountPublicKey,
+} from './util/drift'
 
 const LULO_FLEXLEND_PROGRAM = new PublicKey(
     'FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q',
@@ -54,7 +61,7 @@ describe('lulo vault', () => {
     it('deposit to vault', async () => {
         const owner = program.provider.publicKey
 
-        const amount = new BN(2 * 10 ** 9)
+        const amount = new BN(10 * 10 ** 9)
 
         const ownerTokenAccount = getAssociatedTokenAddressSync(
             NATIVE_MINT,
@@ -102,7 +109,7 @@ describe('lulo vault', () => {
         assert.equal(
             (await connection.getTokenAccountBalance(vaultTokenAccount)).value
                 .uiAmount,
-            2,
+            10,
         )
     })
 
@@ -149,7 +156,7 @@ describe('lulo vault', () => {
         assert.equal(
             (await connection.getTokenAccountBalance(vaultTokenAccount)).value
                 .uiAmount,
-            1,
+            9,
         )
     })
 
@@ -245,5 +252,274 @@ describe('lulo vault', () => {
             .rpc({ skipPreflight: true })
 
         console.log({ luloWithdrawTx })
+    })
+
+    it('direct drift deposit', async () => {
+        const amount = new BN(1 * 10 ** 9)
+
+        const owner = program.provider.publicKey
+
+        const vault = PublicKey.findProgramAddressSync(
+            [Buffer.from('vault'), NATIVE_MINT.toBuffer(), owner.toBuffer()],
+            program.programId,
+        )[0]
+
+        const vaultTokenAccount = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            vault,
+            true,
+        )
+
+        const luloUserAccount = PublicKey.findProgramAddressSync(
+            [Buffer.from('flexlend'), vault.toBuffer()],
+            LULO_FLEXLEND_PROGRAM,
+        )[0]
+
+        const luloUserTokenAccount = getAssociatedTokenAddressSync(
+            NATIVE_MINT,
+            luloUserAccount,
+            true,
+        )
+
+        const driftUser = getDriftUserAccountPublicKey(luloUserAccount)
+        const driftUserStats =
+            getDriftUserStatsAccountPublicKey(luloUserAccount)
+        const driftState = getDriftStateAccountPublicKey()
+
+        const marketIndex = 1
+        const spotMarketVault = getDriftSpotMarketVaultPublicKey(marketIndex)
+        const spotMarket = new PublicKey(
+            '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
+        )
+        const oracle = new PublicKey(
+            'BAtFj4kQttZRVep3UZS2aZRDixkGYgWsbqTBVDbnSsPF',
+        )
+
+        const depositTx = await program.methods
+            .luloDepositDrift(amount)
+            .accounts({
+                owner,
+                vault,
+                vaultTokenAccount,
+                mintAddress: NATIVE_MINT,
+                luloUserAccount,
+                luloUserTokenAccount,
+                luloPromotionReserve: LULO_RESERVE,
+                luloProgram: LULO_FLEXLEND_PROGRAM,
+            })
+            // maybe we could do an API for remaining accounts?
+            .remainingAccounts([
+                {
+                    pubkey: driftUser,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftUserStats,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftState,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: spotMarketVault,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: spotMarket,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: oracle,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                {
+                    pubkey: DRIFT_PROGRAM_ID,
+                    isSigner: false,
+                    isWritable: false,
+                },
+            ])
+            .rpc({ skipPreflight: true })
+
+        console.log({ depositTx })
+    })
+
+    it('direct drift withdraw', async () => {
+        const mintAddress = NATIVE_MINT
+        const amount = new BN(1 * 10 ** 9)
+
+        const owner = program.provider.publicKey
+
+        const vault = PublicKey.findProgramAddressSync(
+            [Buffer.from('vault'), mintAddress.toBuffer(), owner.toBuffer()],
+            program.programId,
+        )[0]
+
+        const vaultTokenAccount = getAssociatedTokenAddressSync(
+            mintAddress,
+            vault,
+            true,
+        )
+
+        const luloUserAccount = PublicKey.findProgramAddressSync(
+            [Buffer.from('flexlend'), vault.toBuffer()],
+            LULO_FLEXLEND_PROGRAM,
+        )[0]
+
+        const luloUserTokenAccount = getAssociatedTokenAddressSync(
+            mintAddress,
+            luloUserAccount,
+            true,
+        )
+
+        const driftUser = getDriftUserAccountPublicKey(luloUserAccount)
+        const driftUserStats =
+            getDriftUserStatsAccountPublicKey(luloUserAccount)
+        const driftState = getDriftStateAccountPublicKey()
+        // const driftSigner = getDriftSignerPublicKey(DRIFT_PROGRAM)
+
+        console.log({
+            vault,
+            vaultTokenAccount,
+            luloUserAccount,
+            luloUserTokenAccount,
+            driftUser,
+            driftUserStats,
+            driftState,
+        })
+
+        const driftSigner = new PublicKey(
+            'JCNCMFXo5M5qwUPg2Utu1u6YWp3MbygxqBsBeXXJfrw',
+        )
+
+        const marketIndex = 1
+        const spotMarketVault = getDriftSpotMarketVaultPublicKey(marketIndex)
+
+        console.log({ spotMarketVault })
+        // const spotMarkets = [
+        //     // new PublicKey('6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3'),
+        //     new PublicKey('3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh'),
+        // ]
+
+        // const oracles = [
+        //     // new PublicKey('Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD'),
+        //     new PublicKey('H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG'),
+        // ]
+
+        const spotMarket = new PublicKey(
+            '3x85u7SWkmmr7YQGYhtjARgxwegTLJgkSLRprfXod6rh',
+        )
+        const oracle = new PublicKey(
+            'BAtFj4kQttZRVep3UZS2aZRDixkGYgWsbqTBVDbnSsPF',
+        )
+
+        const vaultStartBalance = (
+            await connection.getTokenAccountBalance(vaultTokenAccount)
+        ).value.uiAmount
+
+        console.log({ vaultStartBalance })
+
+        let remainingAccounts: any[] = []
+
+        try {
+            // owner is vault here
+            const withdrawParams: any = await (
+                await fetch(
+                    `http://localhost:8080/integration/withdraw-params/drift?mintAddress=${mintAddress.toString()}&owner=${vault.toString()}&amount=1`,
+                )
+            ).json()
+
+            console.log('withdrawParams:', withdrawParams)
+
+            remainingAccounts = withdrawParams.remainingAccounts.map(
+                (a: any) => {
+                    return {
+                        pubkey: new PublicKey(a.pubkey),
+                        isSigner: a.isSigner,
+                        isWritable: a.isWritable,
+                    }
+                },
+            )
+        } catch (e) {
+            remainingAccounts = [
+                {
+                    pubkey: driftUser,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftUserStats,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftState,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: driftSigner,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                {
+                    pubkey: spotMarketVault,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: DRIFT_PROGRAM_ID,
+                    isSigner: false,
+                    isWritable: false,
+                },
+                {
+                    pubkey: oracle,
+                    isSigner: false,
+                    isWritable: true,
+                },
+                {
+                    pubkey: spotMarket,
+                    isSigner: false,
+                    isWritable: true,
+                },
+            ]
+        }
+
+        console.log({ remainingAccounts })
+
+        const withdrawTx = await program.methods
+            .luloWithdrawSync('drift', amount)
+            .preInstructions([
+                ComputeBudgetProgram.setComputeUnitLimit({
+                    units: 1_500_000,
+                }),
+            ])
+            .accounts({
+                owner,
+                vault,
+                vaultTokenAccount,
+                mintAddress: NATIVE_MINT,
+                luloUserAccount,
+                luloUserTokenAccount,
+                luloPromotionReserve: LULO_RESERVE,
+                luloProgram: LULO_FLEXLEND_PROGRAM,
+            })
+            .remainingAccounts(remainingAccounts)
+            .rpc({ skipPreflight: true })
+
+        console.log({ withdrawTx })
+
+        const vaultEndBalance = (
+            await connection.getTokenAccountBalance(vaultTokenAccount)
+        ).value.uiAmount
+
+        // ~1 SOL withdrawn
+        assert.closeTo(vaultEndBalance - vaultStartBalance, 1, 0.0001)
     })
 })
